@@ -82,6 +82,47 @@ var ae = {
 		this.append(cont, '<div class="modalDialog" data-modal="vae"><div class="modal-header"><a class="close"><i class="aei-cross"></i></a><h3>'+lang.vkapi_error+'</h3></div><div class="modal-body">'+lang.vkapi_error+': '+code+' - '+text+'</div><div class="modal-footer"><button class="button accept" onclick="ae.closeModal(\'vae\', true)">'+lang.accept+'</button></div></div>');
 		ae.openModal('vae');
 	},
+	getWall: function(oid){
+		this.VKapi('wall.get', 'owner_id|offset|count|extended|access_token|v', oid+'|0|10|1|'+getCookie('token')+'|5.73', function(da){
+							var da = JSON.parse(da);
+							if(da.error == undefined){
+								var wall = ae.find('.wall');
+								ae.html(wall, '');
+								for(i=0;i<da.response.items.length;i++){
+									var item = da.response.items[i];
+									if(item.from_id > 0){
+										var p = da.response.profiles.findEl(item.from_id,'id');
+										var author = da.response.profiles[p].first_name+' '+da.response.profiles[p].last_name;
+										var avatar = da.response.profiles[p].photo_100;
+										var sn = da.response.profiles[p].screen_name;
+									}
+									if(item.from_id < 0){
+										var p = da.response.groups.findEl(item.from_id,'id');
+										var author = da.response.groups[p].name;
+										var avatar = da.response.groups[p].photo_100;
+										var sn = da.response.groups[p].screen_name;
+									}
+									var wallinner = '<div class="post"><a href="#'+sn+'"><div class="post-header"><span>'+author+'</span> <img src="'+avatar+'"></div></a><div class="post-content">'+item.text;
+									if(item.text != '') wallinner += '<br>';
+									if(item.attachments != undefined){
+										for(a=0;a<item.attachments.length;a++){
+											var at = item.attachments[a];
+											if(at.type == 'photo'){
+												wallinner += '<img src="'+at.photo.photo_604+'">';
+											}
+											if(at.type == 'audio'){
+												wallinner += at.audio.artist+' — '+at.audio.title+'<audio src="'+at.audio.url+'" controls></audio>';
+											}
+										}
+									}
+									wallinner += '</div></div>';
+									ae.append(wall,wallinner);
+								}
+							} else{
+								ae.VKapierr(da.error.error_code, da.error.error_msg);
+							}
+						});
+	},
 	authorize: function(username, password, onError, sid, key){
 		var xhr = new XMLHttpRequest();
 		if(sid == undefined && key == undefined){
@@ -193,6 +234,16 @@ String.prototype.contains = function(find){
 		return true;
 	}
 }
+
+Array.prototype.findEl = function(find,findName){
+for(p=0;p<this.length;p++){
+if(this[p][findName] == find){
+return p;
+}
+}
+}
+
+
 
 function getCookie(name) { var matches = document.cookie.match(new RegExp( "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)" )); return matches ? decodeURIComponent(matches[1]) : undefined; }
 function deleteCookie(name) { setCookie(name, "", { expires: -1 }) }

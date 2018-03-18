@@ -116,7 +116,8 @@ var pages = {
    		ae.append(bl,b);
    	}
    });
-						html += '</div></div>';
+						html += '</div></div><div class="wall"><i class="fa fa-circle-o-notch fa-spin"></i></div>';
+						ae.getWall(d.response[0].id);
 						ae.html(cont,html);
 						//alert(ae.html(cont));
 							document.title = d.response[0].first_name+' '+d.response[0].last_name;
