@@ -54,7 +54,6 @@ if(isset($_COOKIE['token'])){
 <div class="preloader"><i class="fa fa-circle-o-notch fa-spin"></i></div>
 <div class="cap-div"></div>
 <script src="/altvk/js/jq.js"></script>
-<script src="/altvk/js/swipelib.js"></script>
 <script src="/altvk/js/ae.js?<? echo filectime($_SERVER['DOCUMENT_ROOT'].'/altvk/js/ae.js');?>"></script>
 <script src="/altvk/js/script.js?<? echo filectime($_SERVER['DOCUMENT_ROOT'].'/altvk/js/script.js');?>"></script>
 <script src="/altvk/js/pages.js?<? echo filectime($_SERVER['DOCUMENT_ROOT'].'/altvk/js/pages.js');?>"></script>

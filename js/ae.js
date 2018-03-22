@@ -69,7 +69,7 @@ var ae = {
 	},
 	VKapi: function(method, params, values, callback){
 				var xhr = new XMLHttpRequest();
-				xhr.open('GET', "/altvk/vkapi.php?method="+method+"&params="+params+"&values="+values, true);
+				xhr.open('GET', "/altvk/vkapi.php?method="+method+"&params="+params+"&values="+values+'&client='+getCookie('client'), true);
 				xhr.send();
 				xhr.onreadystatechange = function(){
 					if(this.readyState != 4) return;
@@ -123,12 +123,12 @@ var ae = {
 							}
 						});
 	},
-	authorize: function(username, password, onError, sid, key){
+	authorize: function(username, password, client, onError, sid, key){
 		var xhr = new XMLHttpRequest();
 		if(sid == undefined && key == undefined){
-			xhr.open('GET', '/altvk/methods.php?method=auth&params='+username+'|'+password, true);
+			xhr.open('GET', '/altvk/methods.php?method=auth&params='+username+'|'+password+'&client='+client, true);
 		} else{
-			xhr.open('GET', '/altvk/methods.php?method=auth&params='+username+'|'+password+'|'+sid+'|'+key, true);
+			xhr.open('GET', '/altvk/methods.php?method=auth&params='+username+'|'+password+'|'+sid+'|'+key+'&client='+client, true);
 		}
 		xhr.send();
 		xhr.onreadystatechange = function(){
@@ -137,6 +137,7 @@ var ae = {
 			if(res.error == undefined){
 				setCookie('token', res.access_token);
 				setCookie('uid', res.user_id);
+				setCookie('client', client);
 				ae.VKapi('users.get', 'user_ids|fields|v', res.user_id+'|screen_name|5.73', function(d){
 					var d = JSON.parse(d);
 					setCookie('sn', d.response[0].screen_name);

@@ -175,7 +175,7 @@ body{
 }
 
 .navbar{
-	position: absolute;
+	position: fixed;
 	top:0;
 	height: 50px;
 	background: #5181B8;

@@ -3,13 +3,29 @@ require $_SERVER['DOCUMENT_ROOT'].'/altvk/libs/Request.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/altvk/libs/vkapi.php';
 $get = $_GET;
 if($get['method'] == 'auth'){
+if($get['client'] == 1){
+	//android
+	$client_id = 2274003;
+	$client_secret = 'hHbZxrka2uZ6jB1inYsH';
+	$ua = 'VKAndroidApp/4.13.1-1206 (Android 7.1.2; SDK 25; armeabi-v7a; Xiaomi Redmi 4X; ru);';
+}
+if($get['client'] == 2){
+	//kate
+	$client_id = 2685278;
+	$client_secret = 'lxhD8OD7dMsqtXIm5IUY';
+	$ua = 'KateMobileAndroid/48.1 lite-431 (Android 7.1.2; SDK 25; arm64-v8a; Xiaomi Redmi 4X; ru);';
+}
+if(!isset($get['client'])){
+	$ar = array('error' => 'invalid_client_id');
+	echo json_encode($ar);
+}
 $params = explode('|', $get['params']);
-$par = array('grant_type' => 'password', 'scope' => 2047135, 'client_id' => 2274003, 'client_secret' => 'hHbZxrka2uZ6jB1inYsH', 'username' => $params[0], 'password' => $params[1]);
+$par = array('grant_type' => 'password', 'scope' => 2047135, 'client_id' => $client_id, 'client_secret' => $client_secret, 'username' => $params[0], 'password' => $params[1]);
 if(isset($params[2]) && isset($params[3])){
 $par['captcha_sid'] = $params[2];
 $par['captcha_key'] = $params[3];
 }
-$request = new Request('https://api.vk.com/oauth/token', $par);
+$request = new Request('https://api.vk.com/oauth/token', $par, $ua);
 $request->send();
 $res = $request->getResult();
 echo $res;

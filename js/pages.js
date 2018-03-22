@@ -117,7 +117,7 @@ var pages = {
    	}
    });
 						html += '</div></div><div class="wall"><i class="fa fa-circle-o-notch fa-spin"></i></div>';
-						ae.getWall(d.response[0].id);
+						ae.getWall(d.response[0].id, lang.info.vk);
 						ae.html(cont,html);
 						//alert(ae.html(cont));
 							document.title = d.response[0].first_name+' '+d.response[0].last_name;
@@ -206,6 +206,22 @@ var pages = {
 				var d = JSON.parse(d);
 				document.title = lang.menu.friends+' '+lang.of+' '+d.response[0].first_name+' '+d.response[0].last_name;
 			});
+		}
+		if(name == 'audio'){
+			prompt('',getCookie('token'));
+			ae.VKapi('audio.get', 'owner_id|count|access_token|v', getCookie('uid')+'|10|'+getCookie('token')+'|5.73', function(d){
+				var d = JSON.parse(d);
+				var pc = ae.pageContent();
+				ae.html(pc, '');
+				if(d.error == undefined){
+					for(i=0;i<d.response.items.length;i++){
+						var item = d.response.items[i];
+						ae.append(pc, item.artist+' — '+item.title);
+					}
+				} else{
+					ae.VKapierr(d.error.error_code, d.error.error_msg);
+				}
+			})
 		}
 	}
 }

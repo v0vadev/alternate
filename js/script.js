@@ -17,10 +17,11 @@ xhr.onreadystatechange = function(){
 function login(){
 	var login = document.getElementById('user-login').value;
 	var password = document.getElementById('user-password').value;
+	var client = ae.find('.client-choose').options[ae.find('.client-choose').selectedIndex].value;
 	var loginBtn = ae.find('.loginBtn');
 	loginBtn.disabled = true;
 	ae.html(loginBtn, '<i class="fa fa-circle-o-notch fa-spin"></i>');
-	ae.authorize(login, password, loginErr);
+	ae.authorize(login, password, client, loginErr);
 }
 
 function loginErr(d){
@@ -53,7 +54,7 @@ function loginErr(d){
 	}
 }
 
-$('body').swipe({
+/*$('body').swipe({
 	swipe: function(e, dir){
 		if(dir == 'right'){
 			var pc = ae.pageContent();
@@ -64,7 +65,7 @@ $('body').swipe({
 			ae.closeMenu();
 		}
 	}
-});
+});*/
 
 if(getCookie('token') == undefined){
 if(document.documentElement.scrollWidth > 720){
@@ -85,14 +86,14 @@ if(getCookie('token') != undefined){
 } else{
 	var menu = ae.getMenu();
 	ae.html(menu, '<button class="button accept w90" onclick="ae.openModal(\'main\')">'+lang.login_do+'</button>');
-	ae.append(cont, '<button onclick="ae.setLanguage(true)">'+lang.info.title+'</button><a onclick="ae.openModal(\'main\')">'+lang.login_do+'</a></div><div class="modalDialog" data-modal="main"><div><div class="modal-header"><a class="close"><i class="aei-cross"></i></a><h3>'+lang.login_title+'</h3></div><div class="modal-body"><p>'+lang.login_text+'</p><p><input type="text" placeholder="'+lang.login_login+'" class="input-text" id="user-login"><br><input type="password" placeholder="'+lang.login_password+'" class="input-text" id="user-password"><p class="annotation">'+lang.login_demo_about+'</p></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'main\')">'+lang.cancel+'</button><a href="https://oauth.vk.com/authorize?client_id=6376423&display=page&redirect_uri=https://vkrot.xyz/altvk/&callback&scope=135204062&response_type=code&revoke=1&v=5.73"><button class="button cancel">'+lang.login_demo+'</button></a><button class="button accept loginBtn" onclick="login()">'+lang.login_do+'</button></div></div></div>');
+	ae.append(cont, '<button onclick="ae.setLanguage(true)">'+lang.info.title+'</button><a onclick="ae.openModal(\'main\')">'+lang.login_do+'</a></div><div class="modalDialog" data-modal="main"><div><div class="modal-header"><a class="close"><i class="aei-cross"></i></a><h3>'+lang.login_title+'</h3></div><div class="modal-body"><p>'+lang.login_text+'</p><p><input type="text" placeholder="'+lang.login_login+'" class="input-text" id="user-login"><br><input type="password" placeholder="'+lang.login_password+'" class="input-text" id="user-password"><p class="annotation">'+lang.login_demo_about+'<br><select class="client-choose"><optgroup label="'+lang.login_client+':"><option value="1">Android</option>><option value="2">Kate Mobile</option></optgroup></select></p></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'main\')">'+lang.cancel+'</button><a href="https://oauth.vk.com/authorize?client_id=6376423&display=page&redirect_uri=https://vkrot.xyz/altvk/&callback&scope=135204062&response_type=code&revoke=1&v=5.73"><button class="button cancel">'+lang.login_demo+'</button></a><button class="button accept loginBtn" onclick="login()">'+lang.login_do+'</button></div></div></div>');
 	pre.remove();
 }
 }, 2000);
 
 function loadMenu(){
 	var menu = ae.getMenu();
-ae.html(menu, '<ul><li><a href="#'+getCookie('sn')+'">'+lang.menu.my_page+'</a></li><li><a href="#feed">'+lang.menu.feed+'</a></li><li><a href="#notify">'+lang.menu.notifications+'</a></li><li><a href="#friends">'+lang.menu.friends+'</a></li><li><a href="#mail">'+lang.menu.mail+'</a></li><li><a href="#groups">'+lang.menu.groups+'</a></li></ul><button class="button cancel w80" onclick="ae.setLanguage(true)">'+lang.info.title+'</button>');
+ae.html(menu, '<ul><li><a href="#'+getCookie('sn')+'">'+lang.menu.my_page+'</a></li><li><a href="#feed">'+lang.menu.feed+'</a></li><li><a href="#notify">'+lang.menu.notifications+'</a></li><li><a href="#friends">'+lang.menu.friends+'</a></li><li><a href="#mail">'+lang.menu.mail+'</a></li><li><a href="#groups">'+lang.menu.groups+'</a></li><li><a href="#audio">'+lang.menu.audio+'</a></li></ul><button class="button cancel w80" onclick="ae.setLanguage(true)">'+lang.info.title+'</button>');
 //ae.html(menu, '<ul><li><a href="#">Item 1</a></li><li><a href="#">Item 2</a></li><li><a href="#">Item 3</a></li><li><a href="#">Item 4</a></li></ul>');
 }
 
