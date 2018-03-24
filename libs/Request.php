@@ -18,7 +18,9 @@ curl_setopt($this->curl, CURLOPT_SSL_VERIFYHOST, 0);
 
 curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, 0);
 
-curl_setopt($this->curl, CURLOPT_USERAGENT, $this->ua);
+curl_setopt($this->curl, CURLOPT_HTTPHEADER, array(
+ 'User-Agent: '.$this->ua
+));
 }
 
 public function send(){

@@ -82,8 +82,8 @@ var ae = {
 		this.append(cont, '<div class="modalDialog" data-modal="vae"><div class="modal-header"><a class="close"><i class="aei-cross"></i></a><h3>'+lang.vkapi_error+'</h3></div><div class="modal-body">'+lang.vkapi_error+': '+code+' - '+text+'</div><div class="modal-footer"><button class="button accept" onclick="ae.closeModal(\'vae\', true)">'+lang.accept+'</button></div></div>');
 		ae.openModal('vae');
 	},
-	getWall: function(oid){
-		this.VKapi('wall.get', 'owner_id|offset|count|extended|access_token|v', oid+'|0|10|1|'+getCookie('token')+'|5.73', function(da){
+	getWall: function(oid, lang){
+		this.VKapi('wall.get', 'owner_id|offset|count|extended|lang|access_token|v', oid+'|0|10|1|'+lang.info.vk+'|'+getCookie('token')+'|5.73', function(da){
 							var da = JSON.parse(da);
 							if(da.error == undefined){
 								var wall = ae.find('.wall');
@@ -110,11 +110,53 @@ var ae = {
 											if(at.type == 'photo'){
 												wallinner += '<img src="'+at.photo.photo_604+'">';
 											}
+											if(at.type == 'video'){
+												switch(at.video.views.toString().substr(-1)){
+													case 1:
+													 var p = 0;
+													 break;
+													case 2 || 3 || 4:
+													 var p = 1;
+													 break;
+													case 5 || 6 || 7 || 8 || 9 || 0:
+													 var p = 2;
+													 break;
+												}
+												wallinner += '<a href="#video'+at.video.owner_id+'_'+at.video.id+'"><div class="video"><img src="'+at.video.photo_320+'"><span>'+at.video.title+'</span><br><span class="views">'+at.video.views+' '+lang.views[p]+'</span></div></a>';
+											}
+											if(at.type == 'doc'){
+												wallinner += '<a href="'+at.doc.url+'"><div class="doc"><div class="doc-logo"><i class="fa fa-file-o"></i></div><span class="title">'+at.doc.title+'</span></span></div></a>';
+											}
 											if(at.type == 'audio'){
 												wallinner += at.audio.artist+' — '+at.audio.title+'<audio src="'+at.audio.url+'" controls></audio>';
 											}
 										}
 									}
+									if(item.copy_history != undefined){
+										var rep = item.copy_history[0];
+										if(rep.from_id > 0){
+											var a = da.response.profiles.findEl(rep.from_id, 'id');
+											var author = da.response.profiles[a];
+											var name = author.first_name+' '+author.last_name;
+											var ava = author.photo_100;
+										} else{
+											var a = da.response.groups.findEl(rep.from_id*(-1), 'id');
+											var author = da.response.groups[a];
+											var name = author.name;
+											var ava = author.photo_100;
+										}
+										wallinner += '<div class="post"><a href="#'+author.screen_name+'"><div class="post-header"><span>'+name+'</span><img src="'+ava+'" class="repostAvatar"></div></a><div class="post-content">'+rep.text;
+										if(rep.attachments != undefined){
+											for(o=0;o<rep.attachments.length;o++){
+												var at = rep.attachments[o];
+												if(at.type == 'photo'){
+													wallinner += '<img src="'+at.photo.photo_604+'">';
+												}
+											}
+										}
+										wallinner += '</div></div>';
+									}
+									wallinner += '</div><div class="post-footer">'+ae.getDate(item.date, lang.today, lang.yesterday, lang.months)+'</div>';
 									wallinner += '</div></div>';
 									ae.append(wall,wallinner);
 								}

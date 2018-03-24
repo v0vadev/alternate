@@ -63,5 +63,10 @@
 	"about": "About myself",
 	"friends_empty": "No friends",
 	"other": "Other",
-	"of": "of"
+	"of": "of",
+	"views": [
+	 "view",
+	 "views",
+	 "views"
+	]
 }

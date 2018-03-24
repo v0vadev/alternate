@@ -117,7 +117,7 @@ var pages = {
    	}
    });
 						html += '</div></div><div class="wall"><i class="fa fa-circle-o-notch fa-spin"></i></div>';
-						ae.getWall(d.response[0].id, lang.info.vk);
+						ae.getWall(d.response[0].id, lang);
 						ae.html(cont,html);
 						//alert(ae.html(cont));
 							document.title = d.response[0].first_name+' '+d.response[0].last_name;

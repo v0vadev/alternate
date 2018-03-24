@@ -352,10 +352,10 @@ body{
 	padding: 5px;
 }
 
-.wall i{
+/*.wall i{
 	color: #5181B8;
 	font-size: 36px;
-}
+}*/
 
 .wall .post{
 	border: 1px solid #d0d5db;
@@ -386,14 +386,69 @@ body{
 	border-radius: 100px;
 }
 
+.wall .post .post-header .repostAvatar{
+	height: 35px;
+	width: 35px;
+}
+
 .wall .post .post-content{
-	word-wrap: break-word;
+	white-space: pre-wrap;
 	padding: 5px;
 }
 
 .wall .post .post-content img{
 	width: 100%;
 	max-width: 300px;
+}
+
+.wall .post .post-footer{
+	border-top: 1px solid #d0d5db;
+	width: 100%;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	padding-left: 5px;
+	white-space: pre;
+}
+
+/* Video */
+
+.video img{
+	width: 100%;
+}
+
+.video span{
+	font-weight: 800;
+	color: #2A5885;
+	font-size: 16px;
+}
+
+.video .views{
+	color: #96989B;
+	font-size: 12px;
+	font-weight: normal;
+}
+
+/* Document */
+
+.doc{
+	border: 2px solid #5181B8;
+	padding: 2px;
+	border-radius: 100px;
+}
+
+.doc:hover{
+	background: #5181B8;
+	color: #fff;
+}
+
+.doc .doc-logo{
+	font-size: 36px;
+}
+
+.doc .title{
+	display: inline-block;
+	font-weight: 800;
 }
 
 /* Width classes */
