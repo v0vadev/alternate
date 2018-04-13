@@ -79,92 +79,125 @@ var ae = {
 	},
 	VKapierr: function(code, text){
 		var cont = this.pageContent();
-		this.append(cont, '<div class="modalDialog" data-modal="vae"><div class="modal-header"><a class="close"><i class="aei-cross"></i></a><h3>'+lang.vkapi_error+'</h3></div><div class="modal-body">'+lang.vkapi_error+': '+code+' - '+text+'</div><div class="modal-footer"><button class="button accept" onclick="ae.closeModal(\'vae\', true)">'+lang.accept+'</button></div></div>');
+		this.append(cont, '<div class="modalDialog" data-modal="vae"><div><div class="modal-header"><a class="close"><i class="aei-cross"></i></a><h3>'+lang.vkapi_error+'</h3></div><div class="modal-body">'+lang.vkapi_error+': '+code+' - '+text+'</div><div class="modal-footer"><button class="button accept" onclick="ae.closeModal(\'vae\', true)">'+lang.accept+'</button></div></div></div>');
 		ae.openModal('vae');
 	},
-	getWall: function(oid, lang){
-		this.VKapi('wall.get', 'owner_id|offset|count|extended|lang|access_token|v', oid+'|0|10|1|'+lang.info.vk+'|'+getCookie('token')+'|5.73', function(da){
-							var da = JSON.parse(da);
-							if(da.error == undefined){
-								var wall = ae.find('.wall');
-								ae.html(wall, '');
-								for(i=0;i<da.response.items.length;i++){
-									var item = da.response.items[i];
-									if(item.from_id > 0){
-										var p = da.response.profiles.findEl(item.from_id,'id');
-										var author = da.response.profiles[p].first_name+' '+da.response.profiles[p].last_name;
-										var avatar = da.response.profiles[p].photo_100;
-										var sn = da.response.profiles[p].screen_name;
-									}
-									if(item.from_id < 0){
-										var p = da.response.groups.findEl(item.from_id,'id');
-										var author = da.response.groups[p].name;
-										var avatar = da.response.groups[p].photo_100;
-										var sn = da.response.groups[p].screen_name;
-									}
-									var wallinner = '<div class="post"><a href="#'+sn+'"><div class="post-header"><span>'+author+'</span> <img src="'+avatar+'"></div></a><div class="post-content">'+item.text;
-									if(item.text != '') wallinner += '<br>';
-									if(item.attachments != undefined){
-										for(a=0;a<item.attachments.length;a++){
-											var at = item.attachments[a];
-											if(at.type == 'photo'){
-												wallinner += '<img src="'+at.photo.photo_604+'">';
-											}
-											if(at.type == 'video'){
-												switch(at.video.views.toString().substr(-1)){
-													case 1:
-													 var p = 0;
-													 break;
-													case 2 || 3 || 4:
-													 var p = 1;
-													 break;
-													case 5 || 6 || 7 || 8 || 9 || 0:
-													 var p = 2;
-													 break;
-												}
-												wallinner += '<a href="#video'+at.video.owner_id+'_'+at.video.id+'"><div class="video"><img src="'+at.video.photo_320+'"><span>'+at.video.title+'</span><br><span class="views">'+at.video.views+' '+lang.views[p]+'</span></div></a>';
-											}
-											if(at.type == 'doc'){
-												wallinner += '<a href="'+at.doc.url+'"><div class="doc"><div class="doc-logo"><i class="fa fa-file-o"></i></div><span class="title">'+at.doc.title+'</span></span></div></a>';
-											}
-											if(at.type == 'audio'){
-												wallinner += at.audio.artist+' — '+at.audio.title+'<audio src="'+at.audio.url+'" controls></audio>';
-											}
-										}
-									}
-									if(item.copy_history != undefined){
-										var rep = item.copy_history[0];
-										if(rep.from_id > 0){
-											var a = da.response.profiles.findEl(rep.from_id, 'id');
-											var author = da.response.profiles[a];
-											var name = author.first_name+' '+author.last_name;
-											var ava = author.photo_100;
-										} else{
-											var a = da.response.groups.findEl(rep.from_id*(-1), 'id');
-											var author = da.response.groups[a];
-											var name = author.name;
-											var ava = author.photo_100;
-										}
-										wallinner += '<div class="post"><a href="#'+author.screen_name+'"><div class="post-header"><span>'+name+'</span><img src="'+ava+'" class="repostAvatar"></div></a><div class="post-content">'+rep.text;
-										if(rep.attachments != undefined){
-											for(o=0;o<rep.attachments.length;o++){
-												var at = rep.attachments[o];
-												if(at.type == 'photo'){
-													wallinner += '<img src="'+at.photo.photo_604+'">';
-												}
-											}
-										}
-										wallinner += '</div></div>';
-									}
-									wallinner += '</div><div class="post-footer">'+ae.getDate(item.date, lang.today, lang.yesterday, lang.months)+'</div>';
-									wallinner += '</div></div>';
-									ae.append(wall,wallinner);
-								}
-							} else{
-								ae.VKapierr(da.error.error_code, da.error.error_msg);
-							}
-						});
+	getWall: function(oid, lang, today, yesterday, months, offset, next){
+		var months = months.split('|');
+		var wall = this.find('.wall');
+		this.VKapi('wall.get', 'owner_id|offset|count|extended|lang|access_token|v', oid+'|'+offset+'|10|1|'+lang+'|'+getCookie('token')+'|5.73', function(d){
+			var d = JSON.parse(d);
+			var html = '';
+			if(offset == 0) ae.html(wall,'');
+			for(i=0;i<d.response.items.length;i++){
+				var item = d.response.items[i];
+				if(item.marked_as_ads == 1){
+					//no ads
+					//we dont need them
+					delete d.response.items[i];
+					continue;
+				}
+				var author = ae.getOwner(item.from_id,d.response.profiles,d.response.groups);
+				html += '<div class="post"><a href="#'+author.sn+'"><div class="post-header"><span>'+author.title+'</span><img src="'+author.photo+'"></div></a><div class="post-content">';
+				html += item.text+'<br>';
+				//post attachments
+				if(item.attachments != undefined){
+					for(o=0;o<item.attachments.length;o++){
+						html += ae.getAttachment(item.attachments[o]);
+					}
+				}
+				//repost
+				if(item.copy_history != undefined){
+					var rep = item.copy_history[0];
+					var repAuthor = ae.getOwner(rep.from_id,d.response.profiles,d.response.groups);
+					html += '<div class="post"><a href="#'+repAuthor.sn+'"><div class="post-header"><span>'+repAuthor.title+'</span><img src="'+repAuthor.photo+'" class="repostAvatar"></div></a><div class="post-content">'+rep.text+'<br>';
+					//repost attachments
+					if(rep.attachments != undefined){
+						for(p=0;p<rep.attachments.length;p++){
+							html += ae.getAttachment(rep.attachments[p]);
+						}
+					}
+					html += '</div></div>';
+				}
+				if(!item.likes.user_likes){
+					var likes = '<a onclick="ae.addLike('+item.owner_id+', '+item.id+', \'post\')" pid="'+item.owner_id+'_'+item.id+'">'+item.likes.count+' <i class="fa fa-heart-o"></i></a>';
+				} else{
+				 var likes = '<a onclick="ae.remLike('+item.owner_id+', '+item.id+', \'post\')" style="font-weight: 800;" pid="'+item.owner_id+'_'+item.id+'">'+item.likes.count+' <i class="fa fa-heart"></i></a>';
+				}
+				html += '</div><div class="post-footer"><div class="post-date">'+ae.getDate(item.date,today,yesterday,months)+'</div><div class="post-info">'+likes;
+				if(item.views != undefined) html +=' <i class="fa fa-eye"></i> '+ae.shortNum(item.views.count);
+				html += '</div></div></div>';
+				var nbd = ae.find('.next-btn');
+				var op = offset+10;
+				if(op < d.response.count) ae.html(nbd,'<button class="button cancel w100" onclick="ae.getWall('+oid+',\''+lang+'\',\''+today+'\',\''+yesterday+'\',\''+months.join('|')+'\', '+op+',\''+next+'\')">'+next+'</button>');
+			}
+			ae.append(wall,html);
+		});
 	},
+	getAttachment: function(object){
+		switch(object.type){
+			case 'photo':
+			 return '<img src="'+object.photo.photo_604+'">';
+			 break;
+			case 'video':
+			 var v = object.video;
+			 return '<a href="#video'+v.owner_id+'_'+v.id+'"><div class="video"><img src="'+v.photo_320+'"><span>'+v.title+'</span><br><span class="views"><i class="fa fa-eye"></i> '+v.views+'</span></div></a>';
+			 break;
+			case 'link':
+			 var l = object.link;
+			 return '<br><a href="'+l.url+'" class="link"><i class="fa fa-link"></i> '+l.caption+'</a>'
+			 break;
+		}
+	},
+	formatText: function(str){
+		//todo
+		return str.replace(symbols, function(url){
+			return '<a href="'+url+'">'+url+'</a>';
+			});
+	},
+	getOwner: function(id,userObject,groupObject){
+		if(id > 0){
+			var find = userObject.findEl(id,'id');
+			var res = {
+				title: userObject[find].first_name+' '+userObject[find].last_name,
+				photo: userObject[find].photo_100,
+				sn: userObject[find].screen_name
+			};
+		} else if(id < 0){
+			var find = groupObject.findEl(id*-1,'id');
+			var res = {
+				title: groupObject[find].name,
+				photo: groupObject[find].photo_100,
+				sn: groupObject[find].screen_name
+			};
+		}
+		return res;
+	},
+	getGroupList: function (oid, s, offset, next){
+		//using lang because in some languages (like soviet) default profile pictures are different
+			ae.VKapi('groups.get', 'user_id|offset|extended|count|fields|access_token|lang|v', oid+'|'+offset+'|1|10|members_count|'+getCookie('token')+'|ru|5.73', function(d){
+				var d = JSON.parse(d);
+				if(d.response != undefined){
+					var se = ae.find(s);
+					if(offset == 0) ae.html(se,'');
+					for(i=0;i<d.response.items.length;i++){
+						var res = d.response.items[i];
+					ae.append(se, '<div class="list-item"><img src="'+res.photo_50+'"> <a href="#'+res.screen_name+'">'+res.name+'</a></div>');
+					}
+					var o = offset+10;
+					if(o < d.response.count){
+					ae.html(ae.find('.next-btn'), '<button class="button cancel w100" onclick="ae.getGroupList('+oid+', \''+s+'\', '+o+', \''+next+'\')">'+next+'</button>');
+					} else{
+						ae.html(ae.find('.next-btn'), '');
+					}
+				} else{
+					ae.VKapierr(d.error.error_code, d.error.error_msg);
+				}
+			});
+			},
+			showMore: function(text){
+				ae.html(ae.find('.post-text'), text);
+			},
 	authorize: function(username, password, client, onError, sid, key){
 		var xhr = new XMLHttpRequest();
 		if(sid == undefined && key == undefined){
@@ -264,6 +297,40 @@ isset: function(str){
 	} else{
 		return false;
 	}
+},
+shortNum: function(num){
+	if(num > 999){
+		var res = num/1000;
+		return res.toString().substr(0,3)+'K';
+	} else{
+		return num;
+	}
+},
+addLike: function(oid,iid,type){
+	this.VKapi('likes.add', 'type|owner_id|item_id|access_token|v', type+'|'+oid+'|'+iid+'|'+getCookie('token')+'|5.73', function(d){
+		var d = JSON.parse(d);
+		if(d.response != undefined){
+			var likesBtn = ae.find('a[pid="'+oid+'_'+iid+'"]');
+			ae.html(likesBtn, d.response.likes+' <i class="fa fa-heart"></i>');
+			ae.attr(likesBtn, 'style', 'font-weight: 800;');
+			ae.attr(likesBtn, 'onclick', 'ae.remLike('+oid+', '+iid+', \''+type+'\')');
+		} else{
+			ae.VKapierr(d.error.error_code, d.error.error_msg);
+		}
+	});
+},
+remLike: function(oid,iid,type){
+	this.VKapi('likes.delete', 'type|owner_id|item_id|access_token|v', type+'|'+oid+'|'+iid+'|'+getCookie('token')+'|5.73', function(d){
+		var d = JSON.parse(d);
+		if(d.response != undefined){
+			var likesBtn = ae.find('a[pid="'+oid+'_'+iid+'"]');
+			ae.html(likesBtn, d.response.likes+' <i class="fa fa-heart-o"></i>');
+			ae.attr(likesBtn, 'style', '');
+			ae.attr(likesBtn, 'onclick', 'ae.addLike('+oid+', '+iid+', \''+type+'\')');
+		} else{
+			ae.VKapierr(d.error.error_code, d.error.error_msg);
+		}
+	});
 }
 };
 

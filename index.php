@@ -51,8 +51,14 @@ if(isset($_COOKIE['token'])){
 <?
 }
 ?>
-<div class="preloader"><i class="fa fa-circle-o-notch fa-spin"></i></div>
+<div class="preloader"><h1><i class="aei-logo"></i></h1><i class="fa fa-circle-o-notch fa-spin"></i></div>
 <div class="cap-div"></div>
+<script>
+ setTimeout(function(){
+	var p = document.querySelector('.preloader');
+	p.innerHTML += '<br><span style="font-size:12px;">Can\'t load? Check the internet connection</span>';
+}, 5000);
+</script>
 <script src="/altvk/js/jq.js"></script>
 <script src="/altvk/js/ae.js?<? echo filectime($_SERVER['DOCUMENT_ROOT'].'/altvk/js/ae.js');?>"></script>
 <script src="/altvk/js/script.js?<? echo filectime($_SERVER['DOCUMENT_ROOT'].'/altvk/js/script.js');?>"></script>

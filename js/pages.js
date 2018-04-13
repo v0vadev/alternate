@@ -3,6 +3,7 @@
 
 var pages = {
 	init: function(name){
+		ae.closeMenu();
 		//user page
 		if(name == 'user'){
 			var id = window.location.hash.substr(1);
@@ -11,7 +12,7 @@ var pages = {
 			id = id.split('?')[0];
 			}
 			var fields = 'photo_id, verified, sex, bdate, city, country, home_town, has_photo, photo_50, photo_100, photo_200_orig, photo_200, photo_400_orig, photo_max, photo_max_orig, online, domain, has_mobile, contacts, site, status, last_seen, followers_count, occupation, nickname, relatives, relation, personal, connections, exports, activities, interests, music, movies, tv, books, games, about, quotes, can_post, can_see_all_posts, can_see_audio, can_write_private_message, can_send_friend_request, screen_name, is_friend, career, military, blacklisted';
-			var fields = encodeURIComponent(fields);
+			fields = encodeURIComponent(fields);
 			ae.VKapi('users.get', 'user_ids|fields|access_token|lang|v', id+'|'+fields+'|'+getCookie('token')+'|'+lang.info.vk+'|5.73', function(d){
 					var d = JSON.parse(d);
 						var cont = ae.find('#cont');
@@ -25,7 +26,7 @@ var pages = {
 							var status = d.response[0].status;
 						}
 					 window.html = '<div class="user-header"><img src="'+d.response[0].photo_200+'"> '+d.response[0].first_name+' '+d.response[0].last_name;
-						if(d.response[0].verified == 1 || d.response[0].id == '176628549') html += ' <span class="fa fa-stack fa-lg verify"><i class="fa fa-certificate fa-stack-2x"></i><i class="fa fa-check fa-stack-1x fa-inverse"></i></span>';
+						if(d.response[0].verified == 1 || d.response[0].id == 176628549) html += ' <span class="fa fa-stack fa-lg verify"><i class="fa fa-certificate fa-stack-2x"></i><i class="fa fa-check fa-stack-1x fa-inverse"></i></span>';
 						if(d.response[0].online == 1){
 							if(d.response[0].online_mobile == 1){
 								html += ' <span class="online"><i class="fa fa-mobile"></i></span>';
@@ -116,9 +117,15 @@ var pages = {
    		ae.append(bl,b);
    	}
    });
-						html += '</div></div><div class="wall"><i class="fa fa-circle-o-notch fa-spin"></i></div>';
-						ae.getWall(d.response[0].id, lang);
+   var hash = window.location.hash;
+   if(hash.contains('?') && hash.split('?')[1].contains('offset')){
+   	var offset = hash.split('?')[1].split('=')[1];
+   } else{
+   	var offset = 0;
+   }
+						html += '</div></div><div class="wall"><i class="fa fa-circle-o-notch fa-spin"></i></div><div class="next-btn"></div>';
 						ae.html(cont,html);
+						ae.getWall(d.response[0].id, lang.info.vk, lang.today, lang.yesterday, lang.months.join('|'), offset, lang.next);
 						//alert(ae.html(cont));
 							document.title = d.response[0].first_name+' '+d.response[0].last_name;
 							} else{
@@ -221,7 +228,70 @@ var pages = {
 				} else{
 					ae.VKapierr(d.error.error_code, d.error.error_msg);
 				}
-			})
+			});
+		}
+		//groups
+		if(name == 'groups'){
+			var hash = window.location.hash.substr(1);
+			if(hash.contains('?')){
+			var id = (hash.split('?')[1].contains('id')) ? hash.split('?')[1].substr(3) : getCookie('uid');
+			} else{
+				var id = getCookie('uid');
+			}
+			var cont = ae.pageContent();
+			var offset = 0;
+			ae.html(cont, '<div class="inline-menu"><a href="#groups" class="link-choosen">'+lang.menu.groups+'</a><a href="#groups?act=manage" class="link-non-choosen">'+lang.group_manage+'</a><button class="button accept" onclick="ae.openModal(\'createGroup\')">'+lang.group_create+'</button></div><div class="modalDialog" data-modal="createGroup"><div><div class="modal-header"><a class="close"><i class="fa fa-times"></i></a><h3>'+lang.group_create+'</h3></div><div class="modal-body"><p><input id="group-name" placeholder="'+lang.group_name+'" class="input-text"></p></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'createGroup\')">'+lang.cancel+'</button><button class="button accept" onclick="createGroup()">'+lang.create+'</button></div></div></div><div class="group-list"></div><div class="next-btn"></div>');
+			var gl = ae.find('.group-list');
+			ae.html(gl, '<i class="fa fa-circle-o-notch fa-spin"></i>');
+			ae.getGroupList(id, '.group-list', 0, lang.next);
+			ae.VKapi('users.get', 'user_ids|lang|name_case|v', id+'|'+lang.info.vk+'|gen|5.73', function(d){
+				var d = JSON.parse(d);
+				document.title = lang.menu.groups+' '+lang.of+' '+d.response[0].first_name+' '+d.response[0].last_name;
+			});
+		}
+		//group page
+		if(name == 'group'){
+			var id = window.location.hash.substr(1);
+			if(id.contains('?')){
+			var act = (id.split('?')[1].contains('act')) ? id.split('?')[1].substr(4) : null;
+			id = id.split('?')[0];
+			}
+			var cont = ae.pageContent();
+			var fields = 'city,country, place,description,wiki_page,market,members_count,counters,start_date,finish_date,can_post,can_see_all_posts,activity,status,contacts,links,fixed_post,verified,site,ban_info,cover';
+			ae.VKapi('groups.getById', 'group_id|fields|access_token|v', id+'|'+fields+'|'+getCookie('token')+'|5.73', function(d){
+				var d = JSON.parse(d);
+				ae.html(cont, '');
+				if(act == undefined){
+					var html = '';
+					if(d.response[0].cover.enabled == 1) html += '<img class="cover" src="'+d.response[0].cover.images[3].url+'">';
+				html += '<div class="user-header"><img src="'+d.response[0].photo_200+'"> '+d.response[0].name;
+						if(d.response[0].verified == 1 || d.response[0].id == 164268222) html += ' <span class="fa fa-stack fa-lg verify"><i class="fa fa-certificate fa-stack-2x"></i><i class="fa fa-check fa-stack-1x fa-inverse"></i></span>';
+						if(d.response[0].status == '' || d.response[0].status == undefined){
+							if(d.response[0].is_admin == 1){
+							var s = lang.status_change;	
+							} else{
+								var s = '';
+							}
+							html += '<br><span clasa="statusSpan">'+s+'</span>';
+						} else{
+							html += '<br><span clasa="statusSpan">'+d.response[0].status+'</span>';
+						}
+						if(d.response[0].is_admin == 1){
+							html += '<br><a href="#'+d.response[0].screen_name+'?act=settings">'+lang.settings+'</a>';
+						}
+						if(d.response[0].description != '' && d.response[0].description != undefined){
+							html += '<div class="card"><div class="card-header">'+lang.description+'</div><div class="card-content"><p class="desc">'+ d.response[0].description+'</p></div></div>';
+						}
+						html += '<div class="card"><div class="card-header">'+lang.group_info+'</div><div class="card-content center"><a href="#'+d.response[0].screen_name+'?act=members"><div class="card-btn" style="width: 90%; text-align: center;"><span>'+d.response[0].members_count+'</span><br>'+lang.members[2]+'</div></a></div></div>'
+						html += '</div><div class="wall"></div><div class="next-btn"></div>';
+						var offset = 0;
+						} else if(act == 'settings'){
+							html = '<h2>'+lang.settings+'</h2><br>'+lang.group_name+': <input type="text" class="input-text" id="group-name" value="'+d.response[0].name+'"><br>'+lang.group_screen_name+': <input type="text" id="group-sn" class="input-text" value="'+d.response[0].screen_name+'"><br><button class="button accept" onclick="groupSave('+d.response[0].id+')">'+lang.save+'</button>';
+						}
+						ae.html(cont, html);
+						ae.getWall(-d.response[0].id, lang.info.vk, lang.today, lang.yesterday, lang.months.join('|'), offset, lang.next);
+						document.title = d.response[0].name;
+			});
 		}
 	}
 }

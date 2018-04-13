@@ -141,9 +141,6 @@ body{
 
 .menu{
 	float: left;
-	width: auto;
-	max-width: 200px;
-	width: 50%;
 }
 
 .menu ul{
@@ -208,15 +205,25 @@ body{
 		border-radius: 0px;
 	}
 	.menu{
-		border-right: 1px solid #96989B;
-		height: 100%;
+		border-bottom: 1px solid #5181B8;
+		width: 100%;
+		background: #fff;
 		display: none;
-		margin-bottom: 10px;
-		margin-right: 10px;
+		position: fixed;
+		top: 0;
+		z-index: 9999;
+		margin-top: 50px;
+		margin-left: -10px;
 	}
 	.wall .post .post-header img{
 		margin-left: 56%;
 	}
+	 .wall .post .post-footer .post-info{
+	 margin-left: 30%;
+ }
+ .cover{
+ 	 margin-top: -10px;
+ }
 }
 
 /* Pages */
@@ -254,6 +261,11 @@ body{
 	font-size: 12px;
 }
 
+.cover{
+	width: 104.7%;
+	margin-left: -8px;
+}
+
 /* Full */
 @media screen and (min-width: 720px){
 	.page-content{
@@ -269,10 +281,18 @@ body{
 	}
 	.menu{
 		padding-top: 60px;
+		max-width: 200px;
+		width: 50%;
 	}
 	.wall .post .post-header img{
 		margin-left: 62%;
 	}
+	 .wall .post .post-footer .post-info{
+	 margin-left: 55%;
+ }
+ .cover{
+ 	 margin-top: -8px;
+ }
 }
 
 /* Card */
@@ -294,6 +314,7 @@ body{
 	border-top: 1px solid #d0d5db;
 	border-bottom: 1px solid #d0d5db;
 	padding: 2px 5px 2px 5px;
+	font-size: 18px;
 }
 
 .card .card-content{
@@ -301,6 +322,7 @@ body{
 	min-height: 50px;
 	padding: 10px 0px 5px 0px;
 	width: 100%;
+	font-weight: normal;
 }
 
 .card .card-content p{
@@ -328,6 +350,10 @@ body{
 	font-size: 36px;
 }
 
+.card .card-content .desc{
+	font-size: 16px;
+}
+
 /* Friends */
 
 .list-item{
@@ -351,11 +377,6 @@ body{
 	text-align: center;
 	padding: 5px;
 }
-
-/*.wall i{
-	color: #5181B8;
-	font-size: 36px;
-}*/
 
 .wall .post{
 	border: 1px solid #d0d5db;
@@ -411,6 +432,10 @@ body{
 	white-space: pre;
 }
 
+.wall .post .post-footer .post-date{
+	width: 30%;
+}
+
 /* Video */
 
 .video img{
@@ -432,23 +457,47 @@ body{
 /* Document */
 
 .doc{
-	border: 2px solid #5181B8;
 	padding: 2px;
-	border-radius: 100px;
-}
-
-.doc:hover{
-	background: #5181B8;
-	color: #fff;
 }
 
 .doc .doc-logo{
-	font-size: 36px;
+	font-size: 34px;
+	color: #fff;
+	background: #CFD0D3;
+	display: inline-block;
+	padding: 5px;
+	width: 36px;
+	height: 36px;
+	border-radius: 100px;
 }
 
 .doc .title{
 	display: inline-block;
 	font-weight: 800;
+}
+
+/* Other */
+
+.inline-menu{
+	margin: 10px;
+}
+
+.link-choosen{
+	background: #5181B8;
+	color: #fff;
+	padding: 4px;
+	border-radius: 2px;
+	margin: 2px;
+}
+
+.link-non-choosen{
+	padding: 4px;
+	border-radius: 2px;
+	margin: 2px;
+}
+
+.link-non-choosen:hover{
+	background: #E5EBF1;
 }
 
 /* Width classes */
@@ -540,37 +589,37 @@ body{
 
 @keyframes fromleft{
 	from{
-		transform: translateX(-200px);
+		opacity: 0;
 	}
 	to{
-		transform: translateX(0px);
+		opacity: 1;
 	}
 }
 
 @-moz-keyframes fromleft{
 	from{
-		transform: translateX(-200px);
+		opacity: 0;
 	}
 	to{
-		transform: translateX(0px);
+		opacity: 1;
 	}
 }
 
 @-o-keyframes fromleft{
 	from{
-		transform: translateX(-200px);
+		opacity: 0;
 	}
 	to{
-		transform: translateX(0px);
+		opacity: 1;
 	}
 }
 
 @-webkit-keyframes fromleft{
 	from{
-		transform: translateX(-200px);
+		opacity: 0;
 	}
 	to{
-		transform: translateX(0px);
+		opacity: 1;
 	}
 }
 

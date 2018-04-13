@@ -1,3 +1,4 @@
+//technical
 if(getCookie('lang') == undefined || getCookie('lang') == 'ru' || getCookie('lang') == 'en'){
 	setCookie('lang', 'ru_RU');
 }
@@ -175,6 +176,33 @@ function goOffline(){
 			onlineDot.remove();
 		} else{
 			ae.VKapierr(d.error.error_code, d.error_error_msg);
+		}
+	});
+}
+
+function createGroup(){
+	var name = ae.find('#group-name').value;
+	var type = 'group';
+	ae.VKapi('groups.create', 'title|type|access_token|v', name+'|'+type+'|'+getCookie('token')+'|5.73', function(d){
+		var d = JSON.parse(d);
+		if(d.response != undefined){
+			ae.closeModal('createGroup');
+			window.location.hash = '#'+d.response.screen_name;
+		} else{
+			ae.VKapierr(d.error.error_code, d.error.error_msg);
+		}
+	});
+}
+
+function groupSave(id){
+	var name = ae.find('#group-name').value;
+	var sn = ae.find('#group-sn').value;
+	ae.VKapi('groups.edit', 'group_id|title|screen_name|access_token|v', id+'|'+name+'|'+sn+'|'+getCookie('token')+'|5.73', function(d){
+		var d = JSON.parse(d);
+		if(d.response != undefined){
+			alert('ok');
+		} else{
+			ae.VKapierr(d.error.error_code, d.error.error_msg);
 		}
 	});
 }
