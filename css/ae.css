@@ -52,6 +52,8 @@ body{
 		z-index: 99999;
 		-webkit-transition: opacity 400ms ease-in;
 		-moz-transition: opacity 400ms ease-in;
+		-o-transition: opacity 400ms ease-in;
+		-ms-transition: opacity 400ms ease-in;
 		transition: opacity 400ms ease-in;
 		display: none;
 	}
@@ -420,6 +422,8 @@ body{
 .wall .post .post-content img{
 	width: 100%;
 	max-width: 300px;
+	margin-top: 10px;
+	margin-bottom: 10px;
 }
 
 .wall .post .post-footer{
@@ -434,6 +438,52 @@ body{
 
 .wall .post .post-footer .post-date{
 	width: 30%;
+}
+
+.textarea{
+	outline: none;
+	width: 100%;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	height: 100px;
+	font-family: Arial;
+	resize: none;
+}
+
+.new-post-block{
+	margin-bottom: 10px;
+}
+
+.atDiv img{
+	margin: 5px;
+}
+
+.poll{
+	text-align: left;
+	border: 1px solid #96989B;
+	border-radius: 20px;
+	padding: 10px;
+}
+
+.poll span{
+	font-size: 24px;
+	font-weight: 800;
+}
+
+.scale{
+	width: 100%;
+	border: 1px solid #555;
+	height: 15px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+.scale-filler{
+	height: 100%;
+	width: 0%;
+	background: #5181B8;
+	color: #fff;
+	text-align: center;
+	font-size: 12px;
 }
 
 /* Video */

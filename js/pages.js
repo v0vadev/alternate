@@ -123,7 +123,9 @@ var pages = {
    } else{
    	var offset = 0;
    }
-						html += '</div></div><div class="wall"><i class="fa fa-circle-o-notch fa-spin"></i></div><div class="next-btn"></div>';
+						html += '</div></div>';
+						if(d.response[0].can_post) html+= '<div class="new-post-block"><button class="button accept w100" onclick="ae.newPostModal('+d.response[0].id+')"><i class="fa fa-pencil-square-o"></i> '+lang.new_post+'</button></div>';
+						html += '<div class="wall"><i class="fa fa-circle-o-notch fa-spin"></i></div><div class="next-btn"></div>';
 						ae.html(cont,html);
 						ae.getWall(d.response[0].id, lang.info.vk, lang.today, lang.yesterday, lang.months.join('|'), offset, lang.next);
 						//alert(ae.html(cont));
@@ -283,7 +285,10 @@ var pages = {
 							html += '<div class="card"><div class="card-header">'+lang.description+'</div><div class="card-content"><p class="desc">'+ d.response[0].description+'</p></div></div>';
 						}
 						html += '<div class="card"><div class="card-header">'+lang.group_info+'</div><div class="card-content center"><a href="#'+d.response[0].screen_name+'?act=members"><div class="card-btn" style="width: 90%; text-align: center;"><span>'+d.response[0].members_count+'</span><br>'+lang.members[2]+'</div></a></div></div>'
-						html += '</div><div class="wall"></div><div class="next-btn"></div>';
+						html += '</div>';
+						if(d.response[0].can_post) html+= '<div class="new-post-block"><button class="button accept w100" onclick="ae.newPostModal(-'+d.response[0].id+')"><i class="fa fa-pencil-square-o"></i> '+lang.new_post+'</button></div>';
+						if(!d.response[0].can_post && d.response[0].type == 'page') html+= '<div class="new-post-block"><button class="button accept w100" onclick="ae.newPostModal(-'+d.response[0].id+')"><i class="fa fa-pencil-square-o"></i> '+lang.suggest_post+'</button></div>';
+						html += '<div class="wall"></div><div class="next-btn"></div>';
 						var offset = 0;
 						} else if(act == 'settings'){
 							html = '<h2>'+lang.settings+'</h2><br>'+lang.group_name+': <input type="text" class="input-text" id="group-name" value="'+d.response[0].name+'"><br>'+lang.group_screen_name+': <input type="text" id="group-sn" class="input-text" value="'+d.response[0].screen_name+'"><br><button class="button accept" onclick="groupSave('+d.response[0].id+')">'+lang.save+'</button>';

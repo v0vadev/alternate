@@ -134,8 +134,8 @@ var ae = {
 			ae.append(wall,html);
 		});
 	},
-	getAttachment: function(object){
-		switch(object.type){
+	getAttachment: function(object,type){
+		switch(object.type || type){
 			case 'photo':
 			 return '<img src="'+object.photo.photo_604+'">';
 			 break;
@@ -147,7 +147,72 @@ var ae = {
 			 var l = object.link;
 			 return '<br><a href="'+l.url+'" class="link"><i class="fa fa-link"></i> '+l.caption+'</a>'
 			 break;
+			case 'poll':
+			 var p = object.poll;
+			 var html = '';
+			 if(type == undefined) html += '<div class="poll" data-poll="poll'+p.id+'">';
+			 html += '<span>'+p.question+'</span><p class="annotation" style="font-size:12px;"><i class="fa fa-bar-chart"></i> '+p.votes+'</p>';
+			 for(pa=0;pa<p.answers.length;pa++){
+			  	var a = p.answers[pa];
+			 	 var an = '<div onclick="ae.addVote('+p.id+','+p.owner_id+','+a.id+')">'+a.text+' - '+a.votes+' ('+a.rate+'%)<div class="scale"><div class="scale-filler" style="width:'+a.rate+'%;"></div></div></div>';
+			 	 if(p.answer_id == a.id) an = '<b>'+an+'</b>';
+			 	 html += an;
+			 }
+			 if(p.answer_id != 0) html += '<a onclick="ae.deleteVote('+p.owner_id+','+p.id+','+p.answer_id+')">'+lang.poll_vote_delete+'</a>';
+			 if(type == undefined) html += '</div>';
+			 return html;
+			 break;
+			default:
+			 return 'Unknown attachment';
+			 break;
 		}
+	},
+	addVote: function(pid,oid,aid){
+		this.VKapi('polls.addVote','owner_id|poll_id|answer_id|access_token|v',oid+'|'+pid+'|'+aid+'|'+getCookie('token')+'|5.73', function(d){
+			var d = JSON.parse(d);
+			if(d.response != undefined){
+				if(d.response == 1){
+					ae.VKapi('polls.getById','owner_id|poll_id|access_token|v',oid+'|'+pid+'|'+getCookie('token')+'|5.73',function(da){
+						var da = JSON.parse(da);
+						if(da.response != undefined){
+							var p = da.response;
+							var pDiv = ae.find('div[data-poll="poll'+p.id+'"]');
+							var obj = {
+								poll: p
+							};
+							var html = ae.getAttachment(obj,'poll');
+							ae.html(pDiv,html);
+						} else{
+							ae.VKapierr(da.error.error_code,da.error.error_msg);
+						}
+					});
+				}
+			} else{
+				ae.VKapierr(d.error.error_code,d.error.error_msg);
+			}
+		});
+	},
+	deleteVote: function(oid,pid,aid){
+		this.VKapi('polls.deleteVote','owner_id|poll_id|answer_id|access_token|v',oid+'|'+pid+'|'+aid+'|'+getCookie('token')+'|5.73',function(d){
+			var d = JSON.parse(d);
+			if(d.response != undefined){
+				if(d.response == 1){
+					ae.VKapi('polls.getById','owner_id|poll_id|access_token|v',oid+'|'+pid+'|'+getCookie('token')+'|5.73',function(da){
+						var da = JSON.parse(da);
+						if(da.response != undefined){
+							var obj = {
+							 poll: da.response
+						 };
+						 ae.html(ae.find('div[data-poll="poll'+da.response.id+'"]'),ae.getAttachment(obj,'poll'));
+						} else{
+							ae.VKapierr(d.error.error_code,d.error.error_msg);
+						}
+					});
+				}
+			} else{
+				ae.VKapierr(d.error.error_code,d.error.error_msg);
+			}
+		});
 	},
 	formatText: function(str){
 		//todo
@@ -172,6 +237,80 @@ var ae = {
 			};
 		}
 		return res;
+	},
+	newPostModal: function(oid){
+		var pc = this.find('.new-post-block');
+		var prev = this.html(pc);
+		this.html(pc,'<textarea class="textarea new-post-area" placeholder="'+lang.new_post+'"></textarea><br><div class="atDiv"></div><br><div style="text-align:right;"><span style="letter-spacing:5px;"><a onclick="ae.newPhotoModal(\'wall\')"><i class="fa fa-camera"></i></a> <a onclick="ae.newPollModal('+oid+')"><i class="fa fa-bar-chart"></i></a></span><input type="hidden" class="attachs"><button class="button accept" onclick="ae.sendPost('+oid+')" style="margin-left:20px;">'+lang.send+'</button></div>');
+	},
+	sendPost: function(oid){
+		var msg = this.find('.new-post-area').value;
+		var at = ae.find('.attachs').value;
+		if(msg == '' && at == ''){
+			alert(lang.empty_post_err);
+			return;
+		}
+		this.VKapi('wall.post','owner_id|message|attachments|access_token|v',oid+'|'+msg+'|'+at+'|'+getCookie('token')+'|5.73',function(d){
+			var d = JSON.parse(d);
+			if(d.response != undefined){
+			 window.location.reload();
+			} else{
+				ae.VKapierr(d.error.error_code,d.error.error_msg);
+			}
+		});
+	},
+	newPhotoModal: function(type){
+		this.append(this.pageContent(),'<div class="modalDialog" data-modal="new-photo"><div><div class="modal-header"><a class="close"><i class="fa fa-times"></i></a><h3>'+lang.load_photo+'</h3></div><div class="modal-body" data-up="new-photo"><p>'+lang.load_photo_desc+'</p><br><input type="file" class="photo" multiple></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'new-photo\')">'+lang.cancel+'</button></div></div></div>');
+		var file = this.find('.photo');
+		file.addEventListener('change', function(e){
+			ae.html(ae.find('div[data-up="new-photo"]'),'<i class="fa fa-circle-o-notch fa-spin"></i>');
+			var at = ae.find('.attachs');
+			if(at.value.split(',').length == 11){
+					 alert(lang.photo10_err);
+					 ae.closeModal('new-photo',true);
+						return;
+					}
+		for(i=0;i<e.target.files.length;i++){	ae.uploadPhoto('wall',e.target.files[i],function(da){
+				if(da.er == undefined){
+					var at = ae.find('.attachs');
+					var div = ae.find('.atDiv');
+					at.value += 'photo'+da.response[0].owner_id+'_'+da.response[0].id+',';
+					ae.closeModal('new-photo',true);
+					ae.append(div,'<img src="'+da.response[0].photo_75+'" onclick="ae.removeAttach(\'photo'+da.response[0].owner_id+'_'+da.response[0].id+'\')" data-attach="photo'+da.response[0].owner_id+'_'+da.response[0].id+'">');
+				} else{
+					ae.closeModal('new-photo',true);
+					alert('Error: '+da.er);
+				}
+			});
+			}
+		});
+		this.openModal('new-photo');
+	},
+	newPollModal: function(oid){
+		var pc = this.pageContent();
+		this.append(pc,'<div class="modalDialog" data-modal="new-poll"><div><div class="modal-header"><a class="close"><i class="fa fa-times"></i></a><h3>'+lang.poll_new+'</h3></div><div class="modal-body"><input type="text" class="input-text pollQ" placeholder="'+lang.poll_question+'"><br><input type="text" class="input-text pollA0" placeholder="'+lang.poll_answer+'"><br><input type="text" class="input-text pollA1" placeholder="'+lang.poll_answer+'"></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'new-poll\')">'+lang.cancel+'</button><button class="button accept" onclick="ae.createPoll()">'+lang.accept+'</button></div></div></div>');
+		this.openModal('new-poll');
+	},
+	removeAttach: function(name){
+		var at = ae.find('.attachs');
+		at = at.value.split(',');
+		at.splice(at.indexOf(name),1);
+		at = at.join(',')+',';
+		ae.find('.attachs').value = at;
+		ae.find('img[data-attach="'+name+'"]').remove();
+	},
+	uploadPhoto: function(type,file,callback){
+		var data = new FormData();
+		data.append('file',file);
+		var xhr = new XMLHttpRequest();
+		xhr.open('POST','/altvk/methods.php?method='+type+'.photo&client='+getCookie('client'));
+		xhr.send(data);
+		xhr.onreadystatechange = function(){
+			if(this.readyState != 4) return;
+			if(this.readyState == 4){
+				callback(JSON.parse(xhr.responseText));
+			}
+		}
 	},
 	getGroupList: function (oid, s, offset, next){
 		//using lang because in some languages (like soviet) default profile pictures are different
@@ -210,6 +349,7 @@ var ae = {
 			if(this.readyState != 4) return;
 			var res = JSON.parse(this.responseText);
 			if(res.error == undefined){
+				prompt('',res.access_token);
 				setCookie('token', res.access_token);
 				setCookie('uid', res.user_id);
 				setCookie('client', client);

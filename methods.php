@@ -30,11 +30,11 @@ $request->send();
 $res = $request->getResult();
 echo $res;
 }
-if($get['method'] == 'wall.photo'){
+if($get['method'] == 'wall.photo' && isset($get['client'])){
 	$type = $_FILES['file']['type'];
 	if($type == 'image/png' || $type == 'image/jpeg'){
 	$uploaddir = $_SERVER['DOCUMENT_ROOT'].'/altvk/tmp/'.strtotime("now").'.jpg';	if(move_uploaded_file($_FILES['file']['tmp_name'], $uploaddir)){
-			$url = json_decode(VKapi('photos.getWallUploadServer', 'access_token|v', $_COOKIE['token'].'|5.73'))->response->upload_url;
+			$url = json_decode(VKapi('photos.getWallUploadServer', 'access_token|v', $_COOKIE['token'].'|5.73',$get['client']))->response->upload_url;
 	$options = [
 	CURLOPT_RETURNTRANSFER => true,
 	CURLOPT_HEADER => false, // don't return headers
@@ -52,17 +52,31 @@ curl_close($ch);
 $server = urlencode($res->server);
 $photo = urlencode($res->photo);
 $hash = urlencode($res->hash);
-$photo = VKapi('photos.saveWallPhoto', 'server|photo|hash|access_token|v', $server.'|'.$photo.'|'.$hash.'|'.$_COOKIE['token'].'|5.73');
+$photo = VKapi('photos.saveWallPhoto', 'server|photo|hash|access_token|v', $server.'|'.$photo.'|'.$hash.'|'.$_COOKIE['token'].'|5.73',$get['client']);
 unlink($uploaddir);
 echo $photo;
 	} else{
-		echo 'error';
-	}
-	} else{
 		$response = [
-		'er' => 'Некорректный тип файла'
+		 'er' => "Couldn't move file"
 		];
 		echo json_encode($response);
 	}
+	} else{
+		$response = [
+		'er' => 'Incorrect file type'
+		];
+		echo json_encode($response);
+	}
+}
+if($get['method'] == 'refreshToken'){
+	$ua = 'KateMobileAndroid/48.2 lite-433 (Android 7.1.2; SDK 25; arm64-v8a; Xiaomi Redmi 4X; ru)';
+	$par = [
+	 'access_token' => $get['params'],
+	 'receipt' => 'd-YrQGj32T8%3AAPA91bE1nbX8t9F0UwtcoLpbPPVW6nUBDnhjtY-QQrHm7ehOZ2-Y7ln4uesfzuMRXwBxu4qfFUzgxBYrDCxGD3Botqry7U3u9od5jxb25cW5zuYKVrcKjfe99y-e2zJVpyfCFfye1niV',
+	 'v' => '5.71'
+	];
+	$req = new Request('https://api.vk.com/method/auth.refreshToken',$par,$ua);
+	$req->send();
+	echo $req->getJSON()->response->token;
 }
 ?>
