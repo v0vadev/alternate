@@ -288,8 +288,46 @@ var ae = {
 	},
 	newPollModal: function(oid){
 		var pc = this.pageContent();
-		this.append(pc,'<div class="modalDialog" data-modal="new-poll"><div><div class="modal-header"><a class="close"><i class="fa fa-times"></i></a><h3>'+lang.poll_new+'</h3></div><div class="modal-body"><input type="text" class="input-text pollQ" placeholder="'+lang.poll_question+'"><br><input type="text" class="input-text pollA0" placeholder="'+lang.poll_answer+'"><br><input type="text" class="input-text pollA1" placeholder="'+lang.poll_answer+'"></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'new-poll\')">'+lang.cancel+'</button><button class="button accept" onclick="ae.createPoll()">'+lang.accept+'</button></div></div></div>');
+		this.append(pc,'<div class="modalDialog" data-modal="new-poll"><div><div class="modal-header"><a class="close"><i class="fa fa-times"></i></a><h3>'+lang.poll_new+'</h3></div><div class="modal-body newPollModal"><input type="text" class="input-text pollQ" placeholder="'+lang.poll_question+'"><div class="ansList"><div class="pollA pollA0"><input type="text" class="input-text" placeholder="'+lang.poll_answer+'"></div><div class="pollA pollA1"><input type="text" class="input-text" placeholder="'+lang.poll_answer+'"> <a onclick="ae.remPollAnswer(1)" style="color:#96989B;" class="remPollA1"><i class="fa fa-times"></i></a></div></div><a onclick="ae.addPollAnswer()" class="addPollA">'+lang.add+'</a></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'new-poll\',true)">'+lang.cancel+'</button><button class="button accept" onclick="ae.createPoll('+oid+')">'+lang.accept+'</button></div></div></div>');
 		this.openModal('new-poll');
+	},
+	createPoll: function(oid){
+		var q = ae.find('.pollQ').value;
+		var bl = ae.find('.ansList');
+		var ans = [];
+		for(i=0;i<bl.querySelectorAll('.pollA').length;i++){
+			ans.push(bl.querySelectorAll('.pollA')[i].childNodes[0].value);
+		}
+		if(question == ''){
+			alert('Question cant be empty');
+			return;
+		}
+		ans = JSON.stringify(ans);
+		ae.VKapi('polls.create','owner_id|question|add_answers|access_token|v',oid+'|'+q+'|'+ans+'|'+getCookie('token')+'|5.73',function(d){
+			var d = JSON.parse(d);
+			if(d.response != undefined){
+				var at = ae.find('.attachs');
+				var ad = ae.find('.atDiv');
+				at.value += 'poll'+d.response.owner_id+'_'+d.response.id+',';
+				ae.closeModal('new-poll',true);
+				ae.append(ad,lang.poll);
+			} else{
+				ae.VKapierr(d.error.error_code,d.error.error_msg);
+			}
+		});
+	},
+	addPollAnswer: function(){
+		var bl = ae.find('.ansList');
+		var all = bl.querySelectorAll('.pollA');
+		ae.append(bl,'<div class="pollA pollA'+all.length+'"><input type="text" class="input-text" placeholder="'+lang.poll_answer+'"> <a onclick="ae.remPollAnswer('+all.length+')" class="remPollA'+all.length+'" style="color: #96989B;"><i class="fa fa-times"></i></a></div>');
+		if(all.length == 9){
+			ae.find('.addPollA').remove();
+			return;
+		}
+	},
+	remPollAnswer: function(i){
+		if(ae.find('.ansList').querySelectorAll('.pollA').length == 10) ae.append(ae.find('.newPollModal'),'<a onclick="ae.addPollAnswer()" class="addPollA">'+lang.add+'</a>');
+		ae.find('.pollA'+i).remove();
 	},
 	removeAttach: function(name){
 		var at = ae.find('.attachs');

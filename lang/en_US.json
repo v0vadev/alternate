@@ -68,5 +68,32 @@
 	 "view",
 	 "views",
 	 "views"
-	]
+	],
+	"group_manage": "Manage",
+	"group_create": "Create group",
+	"create": "Create",
+	"group_name": "Group name",
+	"settings": "Settings",
+	"group_screen_name": "Screen name",
+	"group_info": "Group information",
+	"members": [
+	 "member",
+	 "members",
+	 "members"
+	],
+	"description": "Description",
+	"next": "Next",
+	"new_post": "New post",
+	"suggest_post": "Suggest a post",
+	"send": "Send",
+	"load_photo": "Upload a photo",
+	"load_photo_desc": "Just choose file and wait",
+	"photo10_err": "You can upload not more than 10 photos per one post",
+	"empty_post_err": "You can't send empty post",
+	"poll_vote_delete": "Delete vote",
+	"poll_new": "New poll",
+	"poll_question": "Question",
+	"poll_answer": "Possible answer",
+	"poll": "Poll",
+	"add": "Add"
 }
