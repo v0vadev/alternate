@@ -6,8 +6,10 @@ Alternative version of the largest social network in Europe - VK!
 > Early development
 # Features ready
 + User pages
-+ User walls (not finished)
++ User/group walls (almost done, only attachments left)
 + Friend lists
++ Group lists
++ Group pages
 + Status chnage
 + Multilanguage
 # Why do I have to enter my login and password?
