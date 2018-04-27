@@ -41,6 +41,7 @@ if(isset($_COOKIE['token'])){
 <div class="navbar">
 <button onclick="ae.showMenu()" class="button menu-btn"><i class="aei-menu"></i></button>
 <a href="/altvk/" class="title"><i class="aei-logo"></i> Alternate</a>
+<div class="bb-navbar"></div>
 </div>
 <?
 } else{
@@ -53,6 +54,7 @@ if(isset($_COOKIE['token'])){
 ?>
 <div class="preloader"><h1><i class="aei-logo"></i></h1><i class="fa fa-circle-o-notch fa-spin"></i></div>
 <div class="cap-div"></div>
+<div class="bb-cover"></div>
 <script>
  setTimeout(function(){
 	var p = document.querySelector('.preloader');

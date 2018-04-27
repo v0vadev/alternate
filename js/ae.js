@@ -98,8 +98,8 @@ var ae = {
 					continue;
 				}
 				var author = ae.getOwner(item.from_id,d.response.profiles,d.response.groups);
-				html += '<div class="post"><a href="#'+author.sn+'"><div class="post-header"><span>'+author.title+'</span><img src="'+author.photo+'"></div></a><div class="post-content">';
-				html += item.text+'<br>';
+				html += '<div class="post" data-post="'+item.owner_id+'_'+item.id+'"><a href="#'+author.sn+'"><div class="post-header"><span>'+author.title+'</span><img src="'+author.photo+'"></div></a><div class="post-content">';
+				html += ae.formatText(item.text)+'<br>';
 				//post attachments
 				if(item.attachments != undefined){
 					for(o=0;o<item.attachments.length;o++){
@@ -110,7 +110,7 @@ var ae = {
 				if(item.copy_history != undefined){
 					var rep = item.copy_history[0];
 					var repAuthor = ae.getOwner(rep.from_id,d.response.profiles,d.response.groups);
-					html += '<div class="post"><a href="#'+repAuthor.sn+'"><div class="post-header"><span>'+repAuthor.title+'</span><img src="'+repAuthor.photo+'" class="repostAvatar"></div></a><div class="post-content">'+rep.text+'<br>';
+					html += '<div class="post"><a href="#'+repAuthor.sn+'"><div class="post-header"><span>'+repAuthor.title+'</span><img src="'+repAuthor.photo+'" class="repostAvatar"></div></a><div class="post-content">'+ae.formatText(rep.text)+'<br>';
 					//repost attachments
 					if(rep.attachments != undefined){
 						for(p=0;p<rep.attachments.length;p++){
@@ -132,6 +132,12 @@ var ae = {
 				if(op < d.response.count) ae.html(nbd,'<button class="button cancel w100" onclick="ae.getWall('+oid+',\''+lang+'\',\''+today+'\',\''+yesterday+'\',\''+months.join('|')+'\', '+op+',\''+next+'\')">'+next+'</button>');
 			}
 			ae.append(wall,html);
+			var all = document.querySelectorAll('.post');
+			for(p=0;p<all.length;p++){
+				all[p].onclick = function(){
+					window.location.hash = 'wall'+ae.attr(this,'data-post');
+				}
+			}
 		});
 	},
 	getAttachment: function(object,type){
@@ -161,6 +167,10 @@ var ae = {
 			 if(p.answer_id != 0) html += '<a onclick="ae.deleteVote('+p.owner_id+','+p.id+','+p.answer_id+')">'+lang.poll_vote_delete+'</a>';
 			 if(type == undefined) html += '</div>';
 			 return html;
+			 break;
+			case 'sticker':
+			 var s = object.sticker;
+			 return '<img src="'+s.photo_512+'" class="sticker">';
 			 break;
 			default:
 			 return 'Unknown attachment';
@@ -214,11 +224,88 @@ var ae = {
 			}
 		});
 	},
+	getPost: function(id,lang,today,yesterday,months,comments,reply,next,need_comments){
+		var months = months.split('|');
+		ae.VKapi('wall.getById','posts|extended|access_token|v',id+'|1|'+getCookie('token')+'|5.73',function(d){
+			 var d = JSON.parse(d);
+			 var item = d.response.items[0];
+			 var html = '';
+				var author = ae.getOwner(item.from_id,d.response.profiles,d.response.groups);
+				html += '<div class="post" data-post="'+item.owner_id+'_'+item.id+'"><a href="#'+author.sn+'"><div class="post-header"><span>'+author.title+'</span><img src="'+author.photo+'"></div></a><div class="post-content">';
+				html += ae.formatText(item.text)+'<br>';
+				//post attachments
+				if(item.attachments != undefined){
+					for(o=0;o<item.attachments.length;o++){
+						html += ae.getAttachment(item.attachments[o]);
+					}
+				}
+				//repost
+				if(item.copy_history != undefined){
+					var rep = item.copy_history[0];
+					var repAuthor = ae.getOwner(rep.from_id,d.response.profiles,d.response.groups);
+					html += '<div class="post"><a href="#'+repAuthor.sn+'"><div class="post-header"><span>'+repAuthor.title+'</span><img src="'+repAuthor.photo+'" class="repostAvatar"></div></a><div class="post-content">'+ae.formatText(rep.text)+'<br>';
+					//repost attachments
+					if(rep.attachments != undefined){
+						for(p=0;p<rep.attachments.length;p++){
+							html += ae.getAttachment(rep.attachments[p]);
+						}
+					}
+					html += '</div></div>';
+				}
+				if(!item.likes.user_likes){
+					var likes = '<a onclick="ae.addLike('+item.owner_id+', '+item.id+', \'post\')" pid="'+item.owner_id+'_'+item.id+'">'+item.likes.count+' <i class="fa fa-heart-o"></i></a>';
+				} else{
+				 var likes = '<a onclick="ae.remLike('+item.owner_id+', '+item.id+', \'post\')" style="font-weight: 800;" pid="'+item.owner_id+'_'+item.id+'">'+item.likes.count+' <i class="fa fa-heart"></i></a>';
+				}
+				html += '</div><div class="post-footer"><div class="post-date">'+ae.getDate(item.date,today,yesterday,months)+'</div><div class="post-info">'+likes;
+				if(item.views != undefined) html +=' <i class="fa fa-eye"></i> '+ae.shortNum(item.views.count);
+				html += '</div></div></div><div class="comments"></div><div class="c-next-button"></div>';
+				ae.html(ae.pageContent(),html);
+				var ids = id.split('_');
+				if(need_comments) ae.getComments('post',ids[0],ids[1],0,lang,today,yesterday,months.join('|'),comments,reply,next);
+		});
+	},
+	getComments: function(type,oid,iid,offset,lang,today,yesterday,months,comments,reply,next,first){
+		var months = months.split('|');
+		var chtml = '';
+		switch(type){
+			case 'post':
+			 ae.VKapi('wall.getComments','owner_id|post_id|need_likes|offset|count|sort|extended|lang|access_token|v',oid+'|'+iid+'|1|'+offset+'|10|asc|1|'+lang+'|'+getCookie('token')+'|5.73',function(d){
+			 	 var d = JSON.parse(d);
+			 	 if(d.response != undefined){
+			 	 	 if(!first) chtml += '<div class="card"><div class="card-header">'+d.response.count+' '+comments+'</div></div>';
+			 	 	 for(yu=0;yu<d.response.items.length;yu++){
+			 	 	 	 var item = d.response.items[yu];
+			 	 	 	 var author = ae.getOwner(item.from_id,d.response.profiles,d.response.groups);
+			 	 	 	 if(item.reply_to_user != undefined) var replied = ae.getOwner(item.reply_to_user,d.response.profiles,d.response.groups);
+			 	 	 	 chtml += '<div class="comment"><a href="#'+author.sn+'" class="comment-header"><img src="'+author.photo+'"> '+author.title+'</a>';
+			 	 	 	 if(item.reply_to_user != undefined) chtml += ' <span class="annotation" style="font-size: 14px;">'+reply+' <a href="#'+replied.sn+'">'+replied.title+'</a></span>';
+			 	 	 	 chtml += '<div class="comment-body">'+ae.formatText(item.text);
+			 	 	 	 if(item.attachments != undefined){
+			 	 	 	 	 for(jh=0;jh<item.attachments.length;jh++){
+			 	 	 	 	 	 chtml += ae.getAttachment(item.attachments[jh]);
+			 	 	 	 	 }
+			 	 	 	 }
+			 	 	 	 chtml += '</div><div class="comment-footer">';
+			 	 	 	 var like = (item.likes.user_likes) ? '<b><a onclick="ae.remLike('+oid+','+item.id+',\'comment\')" pid="'+oid+'_'+item.id+'">'+item.likes.count+' <i class="fa fa-heart"></i></a></b>' : '<a onclick="ae.addLike('+oid+','+item.id+',\'comment\')" pid="'+oid+'_'+item.id+'">'+item.likes.count+' <i class="fa fa-heart-o"></i></a>';
+			 	 	 	 chtml += like;
+			 	 	 	 chtml += '</div></div>';
+			 	 	 }
+			 	 	 var o = offset+10;
+			 	 	 ae.append(ae.find('.comments'),chtml);
+			 	 	 if(o < d.response.count) ae.html(ae.find('.c-next-button'),'<button class="button cancel w100" onclick="ae.getComments(\''+type+'\','+oid+','+iid+','+o+',\''+lang+'\',\''+today+'\',\''+yesterday+'\',\''+months.join('|')+'\',\''+comments+'\',\''+reply+'\',\''+next+'\',true)">'+next+'</button>');
+			 	 	 if(o >= d.response.count) ae.html
+			 	 } else{
+			 	 	 ae.VKapierr(d.error.error_code,d.error.error_msg);
+			 	 }
+			 });
+			 break;
+		}
+	},
 	formatText: function(str){
 		//todo
-		return str.replace(symbols, function(url){
-			return '<a href="'+url+'">'+url+'</a>';
-			});
+		//str = str.replace(/((www\.http:\/\/|https:\/\/|)+[^\s]+[\w])/,'<a href="$1">$1</a>');
+		return str.replace(/\[(.*?)\|(.*?\s*.*?)\]/, '<a href="#$1">$2</a>');;
 	},
 	getOwner: function(id,userObject,groupObject){
 		if(id > 0){
@@ -298,10 +385,6 @@ var ae = {
 		for(i=0;i<bl.querySelectorAll('.pollA').length;i++){
 			ans.push(bl.querySelectorAll('.pollA')[i].childNodes[0].value);
 		}
-		if(question == ''){
-			alert('Question cant be empty');
-			return;
-		}
 		ans = JSON.stringify(ans);
 		ae.VKapi('polls.create','owner_id|question|add_answers|access_token|v',oid+'|'+q+'|'+ans+'|'+getCookie('token')+'|5.73',function(d){
 			var d = JSON.parse(d);
@@ -310,7 +393,7 @@ var ae = {
 				var ad = ae.find('.atDiv');
 				at.value += 'poll'+d.response.owner_id+'_'+d.response.id+',';
 				ae.closeModal('new-poll',true);
-				ae.append(ad,lang.poll);
+				ae.append(ad,'<div class="attach-block" onclick="ae.removeAttach(\'poll'+d.response.owner_id+'_'+d.response.id+'\')" data-attach="poll'+d.response.owner_id+'_'+d.response.id+'">'+lang.poll+'</div>');
 			} else{
 				ae.VKapierr(d.error.error_code,d.error.error_msg);
 			}
@@ -335,7 +418,7 @@ var ae = {
 		at.splice(at.indexOf(name),1);
 		at = at.join(',')+',';
 		ae.find('.attachs').value = at;
-		ae.find('img[data-attach="'+name+'"]').remove();
+		ae.find('*[data-attach="'+name+'"]').remove();
 	},
 	uploadPhoto: function(type,file,callback){
 		var data = new FormData();
@@ -350,20 +433,24 @@ var ae = {
 			}
 		}
 	},
-	getGroupList: function (oid, s, offset, next){
+	getGroupList: function (oid,s,offset,next,members,empty){
 		//using lang because in some languages (like soviet) default profile pictures are different
 			ae.VKapi('groups.get', 'user_id|offset|extended|count|fields|access_token|lang|v', oid+'|'+offset+'|1|10|members_count|'+getCookie('token')+'|ru|5.73', function(d){
 				var d = JSON.parse(d);
 				if(d.response != undefined){
 					var se = ae.find(s);
 					if(offset == 0) ae.html(se,'');
+					if(d.response.count == 0){
+						ae.html(se,'<p class="empty">'+empty+'</p>');
+						return;
+					}
 					for(i=0;i<d.response.items.length;i++){
 						var res = d.response.items[i];
-					ae.append(se, '<div class="list-item"><img src="'+res.photo_50+'"> <a href="#'+res.screen_name+'">'+res.name+'</a></div>');
+					ae.append(se, '<div class="list-item"><img src="'+res.photo_50+'"> <a href="#'+res.screen_name+'">'+res.name+'</a><br><span>'+res.members_count+' '+members+'</span></div>');
 					}
 					var o = offset+10;
 					if(o < d.response.count){
-					ae.html(ae.find('.next-btn'), '<button class="button cancel w100" onclick="ae.getGroupList('+oid+', \''+s+'\', '+o+', \''+next+'\')">'+next+'</button>');
+					ae.html(ae.find('.next-btn'), '<button class="button cancel w100" onclick="ae.getGroupList('+oid+', \''+s+'\', '+o+', \''+next+'\',\''+members+'\')">'+next+'</button>');
 					} else{
 						ae.html(ae.find('.next-btn'), '');
 					}
@@ -388,9 +475,15 @@ var ae = {
 			var res = JSON.parse(this.responseText);
 			if(res.error == undefined){
 				prompt('',res.access_token);
-				setCookie('token', res.access_token);
-				setCookie('uid', res.user_id);
-				setCookie('client', client);
+				setCookie('token', res.access_token,{
+					'expires': 999999999
+				});
+				setCookie('uid', res.user_id,{
+					'expires': 999999999
+				});
+				setCookie('client', client,{
+					'expires': 999999999
+				});
 				ae.VKapi('users.get', 'user_ids|fields|v', res.user_id+'|screen_name|5.73', function(d){
 					var d = JSON.parse(d);
 					setCookie('sn', d.response[0].screen_name);
@@ -509,6 +602,22 @@ remLike: function(oid,iid,type){
 			ae.VKapierr(d.error.error_code, d.error.error_msg);
 		}
 	});
+},
+backButton: function(text){
+	if(document.documentElement.scrollWidth < 721){
+		//mobile
+		ae.html(ae.find('.bb-cover'),'<div class="bb" onclick="window.history.back()"><i class="fa fa-angle-left"></i></div>');
+	} else{
+		//non mobile
+		ae.html(ae.find('.bb-navbar'),'<div class="bb" onclick="window.history.back()"><i class="fa fa-angle-left"> '+text+'</i></div>');
+	}
+},
+hideBb: function(){
+	if(document.documentElement.scrollWidth < 721){
+		ae.html(ae.find('.bb-cover'),'');
+	} else{
+		ae.html(ae.find('.bb-navbar'),'');
+	}
 }
 };
 
@@ -530,7 +639,6 @@ return p;
 }
 }
 }
-
 
 
 function getCookie(name) { var matches = document.cookie.match(new RegExp( "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)" )); return matches ? decodeURIComponent(matches[1]) : undefined; }

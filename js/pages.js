@@ -17,6 +17,7 @@ var pages = {
 					var d = JSON.parse(d);
 						var cont = ae.find('#cont');
 						if(act == undefined){
+							ae.hideBb();
 							var btn = ae.find('.menu-btn');
 							btn.innerHTML = '<i class="aei-menu"></i>';
 							btn.onclick = null;
@@ -132,13 +133,7 @@ var pages = {
 							document.title = d.response[0].first_name+' '+d.response[0].last_name;
 							} else{
 								if(act == 'info'){
-									if(document.documentElement.scrollWidth < 721){
-								var btn = ae.find('.menu-btn');
-								btn.innerHTML = '<i class="aei-arrow-left"></i>';
-										btn.onclick = function(){
-										window.location.hash = '#'+d.response[0].screen_name;
-									}
-									}
+									ae.backButton(lang.back);
 									var res = d.response[0];
 									html = '<div class="card"><div class="card-header">'+lang.user_info+'</div><div class="card-content"><p>';
 									if(ae.isset(res.city)){
@@ -183,7 +178,7 @@ var pages = {
 									if(ae.isset(res.about)){
 										html += '<br><span>'+lang.about+':</span> '+res.about;
 									}
-									html += '</div></div>'
+									html += '</div></div>';
 								}
 								ae.html(cont, html);
 							}
@@ -194,8 +189,10 @@ var pages = {
 			var hash = window.location.hash.substr(1);
 			if(hash.contains('?')){
 			var id = (hash.split('?')[1].contains('id')) ? hash.split('?')[1].substr(3) : getCookie('uid');
+			ae.backButton(lang.back);
 			} else{
 				var id = getCookie('uid');
+				ae.hideBb();
 			}
 			var cont = ae.pageContent();
 			var offset = 0;
@@ -237,15 +234,19 @@ var pages = {
 			var hash = window.location.hash.substr(1);
 			if(hash.contains('?')){
 			var id = (hash.split('?')[1].contains('id')) ? hash.split('?')[1].substr(3) : getCookie('uid');
+			ae.backButton(lang.back);
 			} else{
 				var id = getCookie('uid');
+				ae.hideBb();
 			}
 			var cont = ae.pageContent();
 			var offset = 0;
-			ae.html(cont, '<div class="inline-menu"><a href="#groups" class="link-choosen">'+lang.menu.groups+'</a><a href="#groups?act=manage" class="link-non-choosen">'+lang.group_manage+'</a><button class="button accept" onclick="ae.openModal(\'createGroup\')">'+lang.group_create+'</button></div><div class="modalDialog" data-modal="createGroup"><div><div class="modal-header"><a class="close"><i class="fa fa-times"></i></a><h3>'+lang.group_create+'</h3></div><div class="modal-body"><p><input id="group-name" placeholder="'+lang.group_name+'" class="input-text"></p></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'createGroup\')">'+lang.cancel+'</button><button class="button accept" onclick="createGroup()">'+lang.create+'</button></div></div></div><div class="group-list"></div><div class="next-btn"></div>');
+			ae.html(cont,'');
+		 if(id == getCookie('uid')) ae.html(cont, '<div class="inline-menu"><a href="#groups" class="link-choosen">'+lang.menu.groups+'</a><a href="#groups?act=manage" class="link-non-choosen">'+lang.group_manage+'</a><button class="button accept" onclick="ae.openModal(\'createGroup\')">'+lang.group_create+'</button><button onclick="ae.openModal(\'clearGroups\')" disabled>Clear all groups</button></div><div class="modalDialog" data-modal="createGroup"><div><div class="modal-header"><a class="close"><i class="fa fa-times"></i></a><h3>'+lang.group_create+'</h3></div><div class="modal-body"><p><input id="group-name" placeholder="'+lang.group_name+'" class="input-text"><br>'+lang.type+': <select class="groupType"><option value="group">'+lang.group+'</option><option value="public">'+lang.page+'</option><option value="event">'+lang.event+'</option></select></p></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'createGroup\')">'+lang.cancel+'</button><button class="button accept" onclick="createGroup()">'+lang.create+'</button></div></div></div></div><div class="modalDialog" data-modal="clearGroups"><div><div class="modal-header"><a class="close"><i class="fa fa-close"></i></a><h3>Clear all groups</h3></div><div class="modal-body"><p>You will leave <b>all</b> groups. Are you sure?</p></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'clearGroups\')">No</button><button class="button accept" onclick="clearGroups()">Yes, I am totally sure</button></div></div>');
+		 ae.append(cont,'<div class="group-list"></div><div class="next-btn"></div>');
 			var gl = ae.find('.group-list');
 			ae.html(gl, '<i class="fa fa-circle-o-notch fa-spin"></i>');
-			ae.getGroupList(id, '.group-list', 0, lang.next);
+			ae.getGroupList(id, '.group-list', 0, lang.next,lang.members[2],lang.nogroups);
 			ae.VKapi('users.get', 'user_ids|lang|name_case|v', id+'|'+lang.info.vk+'|gen|5.73', function(d){
 				var d = JSON.parse(d);
 				document.title = lang.menu.groups+' '+lang.of+' '+d.response[0].first_name+' '+d.response[0].last_name;
@@ -264,6 +265,7 @@ var pages = {
 				var d = JSON.parse(d);
 				ae.html(cont, '');
 				if(act == undefined){
+					ae.hideBb();
 					var html = '';
 					if(d.response[0].cover.enabled == 1) html += '<img class="cover" src="'+d.response[0].cover.images[3].url+'">';
 				html += '<div class="user-header"><img src="'+d.response[0].photo_200+'"> '+d.response[0].name;
@@ -281,6 +283,7 @@ var pages = {
 						if(d.response[0].is_admin == 1){
 							html += '<br><a href="#'+d.response[0].screen_name+'?act=settings">'+lang.settings+'</a>';
 						}
+						html += (!d.response[0].is_member) ? '<center><button class="button accept w90 jlbtn" onclick="jlGroup('+d.response[0].id+',true)">'+lang.group_join+'</button></center>' : '<center><button class="button cancel w90 jlbtn" onclick="jlGroup('+d.response[0].id+',false)">'+lang.group_leave+'</button></center>';
 						if(d.response[0].description != '' && d.response[0].description != undefined){
 							html += '<div class="card"><div class="card-header">'+lang.description+'</div><div class="card-content"><p class="desc">'+ d.response[0].description+'</p></div></div>';
 						}
@@ -291,12 +294,19 @@ var pages = {
 						html += '<div class="wall"></div><div class="next-btn"></div>';
 						var offset = 0;
 						} else if(act == 'settings'){
+							ae.backButton(lang.back);
 							html = '<h2>'+lang.settings+'</h2><br>'+lang.group_name+': <input type="text" class="input-text" id="group-name" value="'+d.response[0].name+'"><br>'+lang.group_screen_name+': <input type="text" id="group-sn" class="input-text" value="'+d.response[0].screen_name+'"><br><button class="button accept" onclick="groupSave('+d.response[0].id+')">'+lang.save+'</button>';
 						}
 						ae.html(cont, html);
 						ae.getWall(-d.response[0].id, lang.info.vk, lang.today, lang.yesterday, lang.months.join('|'), offset, lang.next);
 						document.title = d.response[0].name;
 			});
+		}
+		//wall
+		if(name == 'wall'){
+			var id = window.location.hash.substr(5);
+			ae.getPost(id,lang.info.vk,lang.today,lang.yesterday,lang.months.join('|'),lang.comments,'replied',lang.next,true);
+			ae.backButton(lang.back);
 		}
 	}
 }

@@ -85,6 +85,7 @@ if(getCookie('token') != undefined){
 	$(document).ready(loadPageFromHash);
 		pre.remove();
 } else{
+	window.location.hash = '';
 	var menu = ae.getMenu();
 	ae.html(menu, '<button class="button accept w90" onclick="ae.openModal(\'main\')">'+lang.login_do+'</button>');
 	ae.append(cont, '<button onclick="ae.setLanguage(true)">'+lang.info.title+'</button><a onclick="ae.openModal(\'main\')">'+lang.login_do+'</a></div><div class="modalDialog" data-modal="main"><div><div class="modal-header"><a class="close"><i class="aei-cross"></i></a><h3>'+lang.login_title+'</h3></div><div class="modal-body"><p>'+lang.login_text+'</p><p><input type="text" placeholder="'+lang.login_login+'" class="input-text" id="user-login"><br><input type="password" placeholder="'+lang.login_password+'" class="input-text" id="user-password"><p class="annotation">'+lang.login_demo_about+'<br><select class="client-choose"><optgroup label="'+lang.login_client+':"><option value="1">Android</option>><option value="2">Kate Mobile</option></optgroup></select></p></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'main\')">'+lang.cancel+'</button><a href="https://oauth.vk.com/authorize?client_id=6376423&display=page&redirect_uri=https://vkrot.xyz/altvk/&callback&scope=135204062&response_type=code&revoke=1&v=5.73"><button class="button cancel">'+lang.login_demo+'</button></a><button class="button accept loginBtn" onclick="login()">'+lang.login_do+'</button></div></div></div>');
@@ -94,7 +95,7 @@ if(getCookie('token') != undefined){
 
 function loadMenu(){
 	var menu = ae.getMenu();
-ae.html(menu, '<ul><li><a href="#'+getCookie('sn')+'">'+lang.menu.my_page+'</a></li><li><a href="#feed">'+lang.menu.feed+'</a></li><li><a href="#notify">'+lang.menu.notifications+'</a></li><li><a href="#friends">'+lang.menu.friends+'</a></li><li><a href="#mail">'+lang.menu.mail+'</a></li><li><a href="#groups">'+lang.menu.groups+'</a></li><li><a href="#audio">'+lang.menu.audio+'</a></li></ul><button class="button cancel w80" onclick="ae.setLanguage(true)">'+lang.info.title+'</button>');
+ae.html(menu, '<ul><li><a href="#'+getCookie('sn')+'">'+lang.menu.my_page+'</a></li><li><a href="#feed">'+lang.menu.feed+'</a></li><li><a href="#notify">'+lang.menu.notifications+'</a></li><li><a href="#friends">'+lang.menu.friends+'</a></li><li><a href="#mail">'+lang.menu.mail+'</a></li><li><a href="#groups">'+lang.menu.groups+'</a></li><li><a href="#audio">'+lang.menu.audio+'</a></li></ul><button class="button cancel w40" onclick="ae.setLanguage(true)">'+lang.info.title+'</button><button onclick="ae.logout()" class="button cancel w40">'+lang.logout+'</button>');
 //ae.html(menu, '<ul><li><a href="#">Item 1</a></li><li><a href="#">Item 2</a></li><li><a href="#">Item 3</a></li><li><a href="#">Item 4</a></li></ul>');
 }
 
@@ -104,6 +105,10 @@ function loadPageFromHash(){
 	var hash = window.location.hash.substr(1);
 	hash = hash.split('?')[0];
 	var load = '/altvk/pages/'+hash+'/#cont';
+	if(window.location.hash.contains('#wall')){
+		var id = hash.substr(4);
+		load = '/altvk/pages/wall/?id='+id+'#cont';
+	}
 	$(cont).load(load, function(r,s,xhr){
 		if(xhr.status == 404){
 			ae.VKapi('users.get', 'user_ids|v', hash+'|5.73', function(d){
@@ -182,8 +187,9 @@ function goOffline(){
 
 function createGroup(){
 	var name = ae.find('#group-name').value;
-	var type = 'group';
-	ae.VKapi('groups.create', 'title|type|access_token|v', name+'|'+type+'|'+getCookie('token')+'|5.73', function(d){
+	var type = ae.find('.groupType');
+	type = type.options[type.options.selectedIndex].value;
+	ae.VKapi('groups.create', 'title|type|subtype|access_token|v', name+'|'+type+'|1|'+getCookie('token')+'|5.73', function(d){
 		var d = JSON.parse(d);
 		if(d.response != undefined){
 			ae.closeModal('createGroup');
@@ -192,6 +198,33 @@ function createGroup(){
 			ae.VKapierr(d.error.error_code, d.error.error_msg);
 		}
 	});
+}
+
+function jlGroup(id,joinOrLeave){
+	var btn = ae.find('.jlbtn');
+	if(joinOrLeave){
+		ae.VKapi('groups.join','group_id|access_token|v',id+'|'+getCookie('token')+'|5.74',function(d){
+			var d = JSON.parse(d);
+			if(d.response != undefined){
+				ae.attr(btn,'class','button cancel w90 jlbtn');
+				ae.attr(btn,'onclick','jlGroup('+id+',false)');
+				ae.html(btn,lang.group_leave);
+			} else{
+				ae.VKapierr(d.error.error_code,d.error.error_msg);
+			}
+		});
+	} else{
+		ae.VKapi('groups.leave','group_id|access_token|v',id+'|'+getCookie('token')+'|5.74',function(d){
+			var d = JSON.parse(d);
+			if(d.response != undefined){
+				ae.attr(btn,'class','button accept w90 jlbtn');
+				ae.attr(btn,'onclick','jlGroup('+id+',true)');
+				ae.html(btn,lang.group_join);
+			} else{
+				ae.VKapierr(d.error.error_code,d.error.error_msg);
+			}
+		});
+	}
 }
 
 function groupSave(id){
@@ -205,4 +238,37 @@ function groupSave(id){
 			ae.VKapierr(d.error.error_code, d.error.error_msg);
 		}
 	});
+}
+
+function clearGroups(){
+	var groups = [];
+	ae.VKapi('groups.get','user_id|count|access_token|v',getCookie('uid')+'|1000|'+getCookie('token')+'|5.74',function(d){
+		var d = JSON.parse(d);
+		for(i=0;i<d.response.items.length;i++){
+			leaveGroup(d.response.items[i]);
+		}
+	});
+}
+
+function leaveGroup(id,cid){
+	if(cid == undefined){
+		var par = 'group_id|access_token|v';
+		var p = id+'|'+getCookie('token')+'|5.74';
+	} else{
+		var ckey = ae.find('.ckey').value;
+		var par = 'group_id|captcha_sid|captcha_key|access_token|v';
+		var p = id+'|'+cid+'|'+ckey+'|'+getCookie('token')+'|5.74';
+		ae.closeModal('captcha');
+	}
+	ae.VKapi('groups.leave',par,p,function(da){
+				var da = JSON.parse(da);
+				if(da.response == undefined){
+					if(da.error.error_code == 14){
+						ae.append(ae.pageContent(),'<div class="modalDialog" data-modal="captcha"><div><div class="modal-header"><a class="close"><i class="fa fa-times"></i></a><h3>'+lang.need_captcha+'</h3></div><div class="modal-body"><img src="'+da.error.captcha_img+'"><input type="text" class="input-text ckey" placeholder="'+lang.captcha_input+'"></div><div class="modal-footer"><button class="button cancel" onclick="ae.closeModal(\'captcha\',true)">'+lang.cancel+'</button><button class="button accept" onclick="leaveGroup('+id+','+da.error.captcha_sid+')">'+lang.accept+'</button></div></div></div>');
+						ae.openModal('captcha');
+					} else{
+						ae.VKapierr(da.error.error_code,da.error.error_msg);
+					}
+				}
+			});
 }
